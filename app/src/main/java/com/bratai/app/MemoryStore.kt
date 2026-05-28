@@ -42,4 +42,46 @@ class MemoryStore(context: Context) {
             emptyList()
         }
     }
+
+    fun addFact(fact: String) {
+        val facts = loadFacts().toMutableList()
+        val cleanFact = fact.trim()
+
+        if (cleanFact.isNotEmpty() && !facts.contains(cleanFact)) {
+            facts.add(cleanFact)
+        }
+
+        saveFacts(facts)
+    }
+
+    fun loadFacts(): List<String> {
+        val raw = prefs.getString("facts", null) ?: return emptyList()
+
+        return try {
+            val array = JSONArray(raw)
+            val result = mutableListOf<String>()
+
+            for (i in 0 until array.length()) {
+                result.add(array.getString(i))
+            }
+
+            result
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveFacts(facts: List<String>) {
+        val array = JSONArray()
+
+        facts.takeLast(50).forEach { fact ->
+            array.put(fact)
+        }
+
+        prefs.edit().putString("facts", array.toString()).apply()
+    }
+
+    fun clearFacts() {
+        prefs.edit().remove("facts").apply()
+    }
 }
